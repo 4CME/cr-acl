@@ -1,0 +1,22 @@
+{
+  "name": "cr-acl",
+  "dependencies": {
+    "angular": "1.6.1",
+    "angular-animate": "1.6.1",
+    "angular-ui-router": "0.3.2",
+    "angular-cookies": "1.6.1"
+  },
+  "devDependencies": {
+    "angular-mocks": "1.6.1"
+  },
+  "homepage": "https://github.com/4CME/cr-acl",
+  "_release": "9d507a8d2d",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "9d507a8d2d0d9afeef668d03a2e84d1c1a1b67a3"
+  },
+  "_source": "https://github.com/4CME/cr-acl.git",
+  "_target": "master",
+  "_originalSource": "https://github.com/4CME/cr-acl.git"
+}

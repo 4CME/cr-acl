@@ -148,6 +148,7 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
         }
     ];
 }]).directive("crGranted", ['crAcl', '$animate', function(acl, $animate) {
+    console.info(acl.getRole())
     return {
         restrict: "A",
         replace: false,
@@ -166,7 +167,13 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
             scope.$watch(function() {
                 return acl.getRole();
             }, function(newV, oldV) {
+                console.log(attr.crGranted);
                 var allowedRoles = attr.crGranted.split(",");
+
+                /**
+                 * NEED FIX!!! Should be chaking FULL hierarchy, and not just first level.
+                 */
+
                 if (allowedRoles.indexOf(acl.getRole()) != -1) {
                     $animate.enter(content, elem.parent(), elem);
                 } else {
