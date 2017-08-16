@@ -8,27 +8,7 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
     var self = {};
     self.roles = config.roles;
     self.redirect = config.redirect;
-    /**
-     * Your role is granted for this route?
-     * @param string identityRole
-     * @param array  sstateRolesGranted
-     * @return bool
-     */
-    self.isGranted = function(identityRole, stateRolesGranted) {
-        var granted = false;
-        if ((identityRole in self.roles) === false) {
-            throw "This role[" + identityRole + "] not exist into InheritanceRoles declaration";
-        }
-        if (stateRolesGranted.indexOf(identityRole) !== -1) {
-            granted = true;
-        }
-        for (var ii in self.roles[identityRole]) {
-            if (stateRolesGranted.indexOf(self.roles[identityRole][ii]) !== -1) {
-                granted = true;
-            }
-        }
-        return granted;
-    };
+
     this.$get = ['$q', '$rootScope', '$injector', '$cookies', '$state',
         function($q, $rootScope, $injector, $cookies, $state) {
             var crAcl = {};
@@ -44,6 +24,14 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
                     self.roles[roleName] = inheritance;
                 });
             };
+
+            /**
+             * Get roles from where roleName inherits
+             */
+            crAcl.getInheritanceRole = function (roleName) {
+                return self.roles[roleName];
+            }
+
             /**
              * Set route name for redirect after unauthorized operation
              */
@@ -101,9 +89,29 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
                     return crAcl;
                 }
                 var is_allowed = (toState.data.is_granted !== undefined) ? toState.data.is_granted : ["ROLE_GUEST"];
-                var isGranted = self.isGranted(crAcl.getRole(), is_allowed);
+                var isGranted = crAcl.recursiveRoleCheck(crAcl.getRole(), is_allowed);
                 return isGranted;
             };
+
+            crAcl.recursiveRoleCheck = function(userRole, allowedRoles) {
+                if ((userRole in self.roles) === false) {
+                    throw "This role[" + userRole + "] does not exist into InheritanceRoles declaration";
+                }
+
+                if (allowedRoles.indexOf(userRole) != -1) {
+                    return true;
+                }
+
+                var roles = crAcl.getInheritanceRole(userRole);
+                for (var i in roles){
+                    if (roles[i] != 'ROLE_USER' && crAcl.recursiveRoleCheck(roles[i], allowedRoles)) {
+                       return true;
+                    }
+                }
+
+                return false;
+            }
+
             /**
              *  getNestedStateUrl
              */
@@ -147,39 +155,21 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
             return crAcl;
         }
     ];
-}]).directive("crGranted", ['crAcl', '$animate', function(acl, $animate) {
-    console.info(acl.getRole())
+}]).directive("crGranted", ['crAcl', function(acl) {
     return {
         restrict: "A",
         replace: false,
-        transclude: 'element',
-        terminal: true,
         link: function(scope, elem, attr, ctrl, $transclude) {
-            var content = false;
-            $transclude(function(clone, newScope) {
-                childScope = newScope;
-                clone[clone.length++] = document.createComment(' end crGranted: ' + attr.crGranted + ' ');
-                block = {
-                    clone: clone
-                };
-                content = clone;
-            });
             scope.$watch(function() {
                 return acl.getRole();
             }, function(newV, oldV) {
-                console.log(attr.crGranted);
+
                 var allowedRoles = attr.crGranted.split(",");
+                var userRole = acl.getRole();
+                var hasRole = acl.recursiveRoleCheck(userRole, allowedRoles);
 
-                /**
-                 * NEED FIX!!! Should be chaking FULL hierarchy, and not just first level.
-                 */
-
-                if (allowedRoles.indexOf(acl.getRole()) != -1) {
-                    $animate.enter(content, elem.parent(), elem);
-                } else {
-                    if (content) {
-                        content.remove();
-                    }
+                if (!hasRole) {
+                    elem.remove();
                 }
             });
         }
