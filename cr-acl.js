@@ -94,9 +94,6 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
             };
 
             crAcl.recursiveRoleCheck = function(userRole, allowedRoles) {
-                console.info('-----')
-                console.log(userRole)
-                console.log(allowedRoles);
 
                 if ((userRole in self.roles) === false) {
                     throw "This role[" + userRole + "] does not exist into InheritanceRoles declaration";
