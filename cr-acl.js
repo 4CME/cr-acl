@@ -94,6 +94,10 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
             };
 
             crAcl.recursiveRoleCheck = function(userRole, allowedRoles) {
+                console.info('-----')
+                console.log(userRole)
+                console.log(allowedRoles);
+
                 if ((userRole in self.roles) === false) {
                     throw "This role[" + userRole + "] does not exist into InheritanceRoles declaration";
                 }
@@ -102,9 +106,13 @@ angular.module("cr.acl", ['ngCookies']).constant("cr-acl.config", {
                     return true;
                 }
 
+                if (allowedRoles.indexOf("ROLE_GUEST") != -1) {
+                    return true;
+                }
+
                 var roles = crAcl.getInheritanceRole(userRole);
                 for (var i in roles){
-                    if (roles[i] != 'ROLE_USER' && crAcl.recursiveRoleCheck(roles[i], allowedRoles)) {
+                    if (roles[i] != 'ROLE_USER' && roles[i] != 'ROLE_GUEST' && crAcl.recursiveRoleCheck(roles[i], allowedRoles)) {
                        return true;
                     }
                 }
